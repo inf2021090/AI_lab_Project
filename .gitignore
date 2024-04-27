@@ -1,0 +1,9 @@
+myenv
+
+docs/logs
+*.log
+
+__pycache__/
+*.pyc
+
+data/dubai_dataset
