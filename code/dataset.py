@@ -1,79 +1,73 @@
 import os
 import cv2
+from PIL import Image
 import numpy as np
 from patchify import patchify
-import logging
 from torch.utils.data import Dataset
 
-class SegmentationDataset(Dataset):
-    def __init__(self, dataset_dir):
-        self.dataset_dir = dataset_dir
-        self.tiles_dirs = sorted(os.listdir(dataset_dir))
+from matplotlib import pyplot as plt
+import random
+import logging
 
-        # print the names of the files in the dataset folder
-        print("Files in dataset folder:")
-        for file_name in os.listdir(dataset_dir):
-            print(f"  {file_name}")
+class SatelliteImageSegmentation(Dataset):
+    def __init__(self, dataset_path, image_patch_size=256):
+        self.dataset_path = dataset_path
+        self.image_patch_size = image_patch_size
+        self.logger = logging.getLogger(__name__)  # Initialize logger
 
-    def __len__(self):
-        return len(self.tiles_dirs)
+    def load_image(self, path):
+        return cv2.imread(path, 1)
 
-    def __getitem__(self, idx):
-        tile_dir = self.tiles_dirs[idx]
-        images_dir = os.path.join(self.dataset_dir, tile_dir, 'images')
-        masks_dir = os.path.join(self.dataset_dir, tile_dir, 'masks')
+    def normalize_image(self, image):
+         image = image/255.0
+         return image
 
-        image_data = []
-        mask_data = []
+    def load_dataset(self):
+        image_dataset = []
+        log_path = "../docs/logs/img_shape.log"
+        logging.basicConfig(filename=log_path, level=logging.INFO)  # Set up logging configuration
+        for image_type in ['images']:
+            if image_type == 'images':
+                image_extension = 'jpg'
+            for tile_id in range(1, 8):
+                for image_id in range(1, 20):
+                    image_path = f'{self.dataset_path}/Tile {tile_id}/{image_type}/image_part_00{image_id}.{image_extension}'
+                    if os.path.exists(image_path):  # Check if image path exists
+                        image = self.load_image(image_path)
+                        if image is not None:
+                            size_x = (image.shape[1] // self.image_patch_size) * self.image_patch_size
+                            size_y = (image.shape[0] // self.image_patch_size) * self.image_patch_size
+                            image = Image.fromarray(image)
+                            image = image.crop((0, 0, size_x, size_y))
+                            image = np.array(image)
+                            patched_images = patchify(image, (self.image_patch_size, self.image_patch_size, 3), step=self.image_patch_size)
+                            for i in range(patched_images.shape[0]):
+                                for j in range(patched_images.shape[1]):
+                                    individual_patched_image = patched_images[i, j, :, :]
+                                    individual_patched_image = self.normalize_image(individual_patched_image)
+                                    individual_patched_image = individual_patched_image[0]#
+                                    image_dataset.append(individual_patched_image)
+                                    # Log the shape of the individual patched image
+                                    self.logger.info(f"Shape of patched image {tile_id}-{image_id}-{i}-{j}: {individual_patched_image.shape}")
 
-        # collect images
-        for image_file in sorted(os.listdir(images_dir)):
-            if image_file.endswith('.jpg'):
-                img_path = os.path.join(images_dir, image_file)
-                image = cv2.imread(img_path, 1)
-                image = np.array(image)
-                if image is not None:
+        return np.array(image_dataset)
 
-                    size_x = (image.shape[1]//256*256)
-                    size_y = (image.shape[0]//256*256)
-                    image = image[0:size_y, 0:size_x]  # Crop the image to a multiple of patch size
 
-                    patches = patchify(image, (256, 256, 3), step=256)
-                    patches = patches.reshape(-1, 256, 256, 3) # check
+path = "../data/dubai_dataset"
+segmentation = SatelliteImageSegmentation(path)
+image_dataset = segmentation.load_dataset()
+print("Image dataset shape:", image_dataset.shape)
 
-                    # Normalize each patch to [0, 1]
-                    patches = patches / 255.0
 
-                    image_data.extend([(patch, img_path) for patch in patches])
-        
-        # collect masks
-        for mask_file in sorted(os.listdir(masks_dir)):
-            if mask_file.endswith('.png'):
-                mask_path = os.path.join(masks_dir, mask_file)
-                mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
-                if mask is not None:
-                    mask_data.append((mask, mask_path))
+print(len(image_dataset))
+print(type(image_dataset[0]))
 
-        return image_data, mask_data
 
-# test 
-if __name__ == "__main__":
-    # logging configuration
-    if not os.path.exists('../docs/logs'):
-        os.makedirs('../docs/logs')
-    image_log_file = os.path.join('../docs/logs', 'image_shapes.log')
-    logging.basicConfig(filename=image_log_file, filemode='w', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+print(type(np.reshape(image_dataset[0], (256, 256, 3))))
 
-    dataset_root_folder = '../data'
-    dataset_name = "dubai_dataset"
 
-    dataset = SegmentationDataset(dataset_dir=os.path.join(dataset_root_folder, dataset_name))
-    print("Total number of tiles:", len(dataset) - 1)
-
-    for tile_id in range(len(dataset) - 1):
-        images_data, masks_data = dataset[tile_id]
-        
-        print("Number of patches:", len(images_data))
-        for image, _ in images_data:
-            #print("Image shape:", image.shape)
-            logging.info("Image shape: %s", image.shape)
+random_image_id = random.randint(0, len(image_dataset))
+plt.figure(figsize=(14,8))
+plt.subplot(121)
+plt.imshow(image_dataset[random_image_id])
+plt.subplot(122)
