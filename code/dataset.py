@@ -10,9 +10,9 @@ import random
 import logging
 
 class SatelliteImageSegmentation(Dataset):
-    def __init__(self, dataset_path, image_patch_size=256):
+    def __init__(self, dataset_path, patch_size=256):
         self.dataset_path = dataset_path
-        self.image_patch_size = image_patch_size
+        self.patch_size = patch_size
         self.logger = logging.getLogger(__name__)  # Initialize logger
 
     def load_image(self, path):
@@ -35,20 +35,20 @@ class SatelliteImageSegmentation(Dataset):
                     if os.path.exists(image_path):  # Check if image path exists
                         image = self.load_image(image_path)
                         if image is not None:
-                            size_x = (image.shape[1] // self.image_patch_size) * self.image_patch_size
-                            size_y = (image.shape[0] // self.image_patch_size) * self.image_patch_size
+                            size_x = (image.shape[1] // self.patch_size) * self.patch_size
+                            size_y = (image.shape[0] // self.patch_size) * self.patch_size
                             image = Image.fromarray(image)
                             image = image.crop((0, 0, size_x, size_y))
                             image = np.array(image)
-                            patched_images = patchify(image, (self.image_patch_size, self.image_patch_size, 3), step=self.image_patch_size)
-                            for i in range(patched_images.shape[0]):
-                                for j in range(patched_images.shape[1]):
-                                    individual_patched_image = patched_images[i, j, :, :]
-                                    individual_patched_image = self.normalize_image(individual_patched_image)
-                                    individual_patched_image = individual_patched_image[0]#
-                                    image_dataset.append(individual_patched_image)
+                            patches = patchify(image, (self.patch_size, self.patch_size, 3), step=self.patch_size)
+                            for i in range(patches.shape[0]):
+                                for j in range(patches.shape[1]):
+                                    patch_image = patches[i, j, :, :]
+                                    patch_image = self.normalize_image(patch_image)
+                                    patch_image = patch_image[0]#
+                                    image_dataset.append(patch_image)
                                     # Log the shape of the individual patched image
-                                    self.logger.info(f"Shape of patched image {tile_id}-{image_id}-{i}-{j}: {individual_patched_image.shape}")
+                                    self.logger.info(f"Shape of patched image {tile_id}-{image_id}-{i}-{j}: {patch_image.shape}")
 
         return np.array(image_dataset)
 
