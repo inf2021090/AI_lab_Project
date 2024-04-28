@@ -1,5 +1,8 @@
 import os
 import cv2
+import numpy as np
+from patchify import patchify
+import logging
 from torch.utils.data import Dataset
 
 class SegmentationDataset(Dataset):
@@ -28,10 +31,21 @@ class SegmentationDataset(Dataset):
             if image_file.endswith('.jpg'):
                 img_path = os.path.join(images_dir, image_file)
                 image = cv2.imread(img_path, 1)
+                image = np.array(image)
                 if image is not None:
-                    image_data.append((image, img_path))
-        
 
+                    size_x = (image.shape[1]//256*256)
+                    size_y = (image.shape[0]//256*256)
+                    image = image[0:size_y, 0:size_x]  # Crop the image to a multiple of patch size
+
+                    patches = patchify(image, (256, 256, 3), step=256)
+                    patches = patches.reshape(-1, 256, 256, 3) # check
+
+                    # Normalize each patch to [0, 1]
+                    patches = patches / 255.0
+
+                    image_data.extend([(patch, img_path) for patch in patches])
+        
         # collect masks
         for mask_file in sorted(os.listdir(masks_dir)):
             if mask_file.endswith('.png'):
@@ -40,40 +54,26 @@ class SegmentationDataset(Dataset):
                 if mask is not None:
                     mask_data.append((mask, mask_path))
 
-        return image_data , mask_data
+        return image_data, mask_data
 
-'''
-        image_files = sorted(os.listdir(images_dir))
-        mask_files = sorted(os.listdir(masks_dir))
-
-        # check if number of images and masks is the same
-        assert len(image_files) == len(mask_files)
-
-        data = []
-        for img_name, mask_name in zip(image_files, mask_files):
-            img_path = os.path.join(images_dir, img_name)
-            mask_path = os.path.join(masks_dir, mask_name)
-
-            data.append((img_path, mask_path))
-
-        return data
-'''
 # test 
 if __name__ == "__main__":
-    dataset_root_folder = '..data/'
+    # logging configuration
+    if not os.path.exists('../docs/logs'):
+        os.makedirs('../docs/logs')
+    image_log_file = os.path.join('../docs/logs', 'image_shapes.log')
+    logging.basicConfig(filename=image_log_file, filemode='w', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+    dataset_root_folder = '../data'
     dataset_name = "dubai_dataset"
 
-    dataset = SegmentationDataset(dataset_dir="../data/dubai_dataset")
+    dataset = SegmentationDataset(dataset_dir=os.path.join(dataset_root_folder, dataset_name))
     print("Total number of tiles:", len(dataset) - 1)
 
-    for path, subdirs, files in os.walk(os.path.join(dataset_root_folder, dataset_name)):
-        dir_name = path.split(os.path.sep)[-1]
-        #print(dir_name)
-        if dir_name == 'masks': # 'images
-            images = os.listdir(path)
-            print(path)
-            #print(images)
-            for i, image_name in enumerate(images):
-                if (image_name.endswith('.png')): # '.jpg
-                    #print(image_name)
-                    a = True
+    for tile_id in range(len(dataset) - 1):
+        images_data, masks_data = dataset[tile_id]
+        
+        print("Number of patches:", len(images_data))
+        for image, _ in images_data:
+            #print("Image shape:", image.shape)
+            logging.info("Image shape: %s", image.shape)
