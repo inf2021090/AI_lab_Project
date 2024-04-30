@@ -53,20 +53,19 @@ class SatelliteImageSegmentation(Dataset):
         img_log_path = "../docs/logs/img_shape.log"
         msk_log_path = "../docs/logs/msk_shape.log"
         logging.basicConfig(filename=img_log_path, level=logging.INFO)  # Set up logging configuration
-        logging.basicConfig(filename=msk_log_path, level=logging.INFO) 
         for image_type in ['images', 'masks']:
             if image_type == 'images':
                 image_extension = 'jpg'
             else:
                 image_extension = 'png'
-            if image_type == 'masks':
-                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             for tile_id in range(1, 8):
                 for image_id in range(1, 20):
                     image_path = f'{self.dataset_path}/Tile {tile_id}/{image_type}/image_part_00{image_id}.{image_extension}'
                     if os.path.exists(image_path):  # Check if image path exists
                         image = self.load_image(image_path)
                         if image is not None:
+                            if image_type == 'masks':
+                                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                             size_x = (image.shape[1] // self.patch_size) * self.patch_size
                             size_y = (image.shape[0] // self.patch_size) * self.patch_size
                             image = Image.fromarray(image)
@@ -84,14 +83,18 @@ class SatelliteImageSegmentation(Dataset):
                                         patch_mask = patches[i,j,:,:]
                                         patch_mask = patch_mask[0]
                                         mask_dataset.append(patch_mask)
+                                        #labels
                                     # Log the shape of the individual patched image
                                     self.logger.info(f"Shape of patched image {tile_id}-{image_id}-{i}-{j}: {patch_image.shape}")
 
-        # masks to labels
-        labels = [self.rgb_2_label(mask) for mask in mask_dataset]
-        labels = np.expand_dims(np.array(labels), axis=3)                          
+        # Process masks to labels
+        for i in range(len(mask_dataset)):
+            label = self.rgb_2_label(mask_dataset[i])
+            labels.append(label)
 
-        return np.array(image_dataset), np.array(mask_dataset), labels
+        labels = np.expand_dims(np.array(labels), axis=3)                           
+        mask_dataset = np.array(mask_dataset)
+        return np.array(image_dataset), mask_dataset, labels
 
 
 path = "../data/dubai_dataset"
@@ -116,3 +119,4 @@ plt.imshow(image_dataset[random_image_id])
 plt.subplot(122)
 #plt.imshow(mask_dataset[random_image_id])
 plt.imshow(labels[random_image_id][:,:,0])
+plt.show()
