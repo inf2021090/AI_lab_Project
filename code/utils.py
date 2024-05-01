@@ -7,4 +7,8 @@ def hex_2_array(hex_color):
     print(color_array)
     return color_array
 
+def to_categorical(y, num_classes):
+    """ 1-hot encodes a tensor """
+    return np.eye(num_classes, dtype='uint8')[y.reshape(-1)].reshape(y.shape[:-1] + (num_classes,))
+
 
