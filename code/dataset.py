@@ -96,27 +96,3 @@ class SatelliteImageSegmentation(Dataset):
         mask_dataset = np.array(mask_dataset)
         return np.array(image_dataset), mask_dataset, labels
 
-
-path = "../data/dubai_dataset"
-segmentation = SatelliteImageSegmentation(path)
-image_dataset, mask_dataset, labels = segmentation.load_dataset()
-print("Image dataset shape:", image_dataset.shape)
-print("Mask dataset shape:", mask_dataset.shape)
-print("Labelst shape:", labels.shape)
-
-print(len(image_dataset))
-print(type(image_dataset[0]))
-print(len(labels))
-
-
-print(type(np.reshape(image_dataset[0], (256, 256, 3))))
-
-
-random_image_id = random.randint(0, len(image_dataset))
-plt.figure(figsize=(14,8))
-plt.subplot(121)
-plt.imshow(image_dataset[random_image_id])
-plt.subplot(122)
-#plt.imshow(mask_dataset[random_image_id])
-plt.imshow(labels[random_image_id][:,:,0])
-plt.show()
