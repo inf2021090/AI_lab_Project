@@ -3,6 +3,8 @@ myenv
 docs/logs
 *.log
 
+docs/*.md
+
 __pycache__/
 *.pyc
 
