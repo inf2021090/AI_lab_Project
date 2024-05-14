@@ -26,21 +26,6 @@ class Conv_Block(nn.Module):
 class Encoder(nn.Module):
     def __init__(self):
         super(Encoder, self).__init__()
-
-    def forward(self, x):
-        pass
-
-class Decoder(nn.Module):
-    def __init__(self):
-        super(Decoder, self).__init__()
-
-    def forward(self, x):
-        pass
-
-class UNet(nn.Module):
-    def __init__(self):
-        super(UNet, self).__init__()
-        # Down part of U-Net
         self.down1 = Conv_Block(3, 64)
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.down2 = Conv_Block(64, 128)
@@ -50,24 +35,9 @@ class UNet(nn.Module):
         self.down4 = Conv_Block(256, 512)
         self.pool4 = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        # Bottleneck
         self.bottleneck = Conv_Block(512, 1024)
 
-        # Up part of U-Net
-        self.up1 = nn.ConvTranspose2d(1024, 512, kernel_size=2, stride=2)
-        self.conv_up1 = Conv_Block(1024, 512)
-        self.up2 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
-        self.conv_up2 = Conv_Block(512, 256)
-        self.up3 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
-        self.conv_up3 = Conv_Block(256, 128)
-        self.up4 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
-        self.conv_up4 = Conv_Block(128, 64)
-
-        # Final part to reduce channels to the number of classes
-        self.final = nn.Conv2d(64, 1, kernel_size=1)  # Assuming binary classification
-
     def forward(self, x):
-        # Downsample
         d1 = self.down1(x)
         p1 = self.pool1(d1)
         d2 = self.down2(p1)
@@ -77,10 +47,25 @@ class UNet(nn.Module):
         d4 = self.down4(p3)
         p4 = self.pool4(d4)
 
-        # Bottleneck
         bn = self.bottleneck(p4)
 
-        # Upsample and concatenate
+        return bn, [d1, d2, d3, d4]
+
+class Decoder(nn.Module):
+    def __init__(self):
+        super(Decoder, self).__init__()
+        self.up1 = nn.ConvTranspose2d(1024, 512, kernel_size=2, stride=2)
+        self.conv_up1 = Conv_Block(1024, 512)
+        self.up2 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
+        self.conv_up2 = Conv_Block(512, 256)
+        self.up3 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
+        self.conv_up3 = Conv_Block(256, 128)
+        self.up4 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
+        self.conv_up4 = Conv_Block(128, 64)
+
+    def forward(self, bn, enc_features):
+        d1, d2, d3, d4 = enc_features
+
         u1 = self.up1(bn)
         u1 = torch.cat([u1, d4], dim=1)
         u1 = self.conv_up1(u1)
@@ -97,13 +82,25 @@ class UNet(nn.Module):
         u4 = torch.cat([u4, d1], dim=1)
         u4 = self.conv_up4(u4)
 
-        # Final convolution
-        out = self.final(u4)
+        return u4
+
+class UNet(nn.Module):
+    def __init__(self,n_classes):
+        super(UNet, self).__init__()
+        self.encoder = Encoder()
+        self.decoder = Decoder()
+        self.final = nn.Conv2d(64, n_classes, kernel_size=1)  # Assuming multy classification
+
+    def forward(self, x):
+        bn, enc_features = self.encoder(x)
+        dec_out = self.decoder(bn, enc_features)
+        out = self.final(dec_out)
         return out
 
 # Test
 if __name__ == "__main__":
-    model = UNet()
+    num_classes = 6
+    model = UNet(num_classes)
     x = torch.randn(1, 3, 256, 256)  # ie batch size 1 n 3 color ch
     output = model(x)
     print(output.shape)  # result [1, 1, 256, 256] (for binary segmentation)
