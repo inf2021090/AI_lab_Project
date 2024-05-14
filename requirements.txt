@@ -6,3 +6,5 @@ torch==2.3.0
 opencv-contrib-python==4.9.0.80
 torchvision==0.18.0 
 ipykernel==6.29.4
+patchify==0.2.3
+scikit-lear==1.4.2
