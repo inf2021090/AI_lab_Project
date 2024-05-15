@@ -85,11 +85,11 @@ class Decoder(nn.Module):
         return u4
 
 class UNet(nn.Module):
-    def __init__(self,n_classes):
+    def __init__(self, n_classes):
         super(UNet, self).__init__()
         self.encoder = Encoder()
         self.decoder = Decoder()
-        self.final = nn.Conv2d(64, n_classes, kernel_size=1)  # Assuming multy classification
+        self.final = nn.Conv2d(64, n_classes, kernel_size=1)  # Assuming multi-class segmentation
 
     def forward(self, x):
         bn, enc_features = self.encoder(x)
@@ -101,7 +101,7 @@ class UNet(nn.Module):
 if __name__ == "__main__":
     num_classes = 6
     model = UNet(num_classes)
-    x = torch.randn(1, 3, 256, 256)  # ie batch size 1 n 3 color ch
+    x = torch.randn(1, 3, 256, 256)  # Batch size 1, 3 color channels, 256x256 image
     output = model(x)
-    print(output.shape)  # result [1, 1, 256, 256] (for binary segmentation)
+    print(output.shape)  # Should be [1, num_classes, 256, 256] for multi-class segmentation
 
