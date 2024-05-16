@@ -1,5 +1,11 @@
 import os
+import torch
 import numpy as np
+
+# create a directory
+def create_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 def hex_2_array(hex_color):
     hex_color = hex_color.lstrip('#')
@@ -11,7 +17,6 @@ def to_categorical(y, num_classes):
     """ 1-hot encodes a tensor """
     return np.eye(num_classes, dtype='uint8')[y.reshape(-1)].reshape(y.shape[:-1] + (num_classes,))
 
-import torch
 
 def jaccard_coef(y_true, y_pred):
     # flatten the tensors
