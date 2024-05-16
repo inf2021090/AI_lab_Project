@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torchsummary import summary
 
 class Conv_Block(nn.Module):
     def __init__(self, in_channels, out_channels, dropout=0.2):
@@ -107,3 +108,8 @@ if __name__ == "__main__":
     x = torch.randn(1, 3, 256, 256)  # batch size 1, 3 color ch, 256x256 image
     output = model(x)
     print(output.shape)  # result [1, 6, 256, 256]
+
+ 
+
+
+
