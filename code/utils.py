@@ -11,4 +11,21 @@ def to_categorical(y, num_classes):
     """ 1-hot encodes a tensor """
     return np.eye(num_classes, dtype='uint8')[y.reshape(-1)].reshape(y.shape[:-1] + (num_classes,))
 
+import torch
+
+def jaccard_coef(y_true, y_pred):
+    # flatten the tensors
+    y_true_flatten = y_true.view(-1)
+    y_pred_flatten = y_pred.view(-1)
+
+    # calculate I and U
+    intersection = torch.sum(y_true_flatten * y_pred_flatten)
+    union = torch.sum(y_true_flatten) + torch.sum(y_pred_flatten) - intersection
+
+    # calculate Jaccard coefficient
+    jaccard = (intersection + 1.0) / (union + 1.0)
+
+    return jaccard
+
+
 
