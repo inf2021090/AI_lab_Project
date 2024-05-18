@@ -5,15 +5,22 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from torchsummary import summary
 import numpy as np
-from dataset import SatelliteImageSegmentation  # Ensure this path is correct for your setup
-from model import UNet  # Ensure this path is correct for your setup
+from dataset import SatelliteImageSegmentation 
+from model import UNet 
+from utils import create_dir
 
-# Define the dataset path and hyperparameters
+# Dataset
 dataset_path = '../data/dubai_dataset'
+
+# Hyperparameters
 batch_size = 8
 num_epochs = 2
 learning_rate = 1e-4
 patch_size = 256
+checkpoint_path = "../saved_models"
+
+# Mk directory if not exist
+create_dir(checkpoint_path)
 
 # Instantiate the dataset
 dataset = SatelliteImageSegmentation(dataset_path, patch_size)
@@ -24,8 +31,10 @@ train_dataset = TensorDataset(torch.tensor(image_dataset, dtype=torch.float32).p
                               torch.tensor(labels, dtype=torch.long))
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-# Initialize the model, loss function, and optimizer
-model = UNet(n_classes=6)  # 6 classes for segmentation
+total_classes = len(np.unique(labels)) # 6 classes for segmentation
+
+# Init  model, loss function, optimizer
+model = UNet(total_classes)  
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -64,9 +73,3 @@ print('Training complete')
 model_save_path = 'unet_model.pth'
 torch.save(model.state_dict(), model_save_path)
 print(f'Model saved to {model_save_path}')
-
-
-
-
-
-
