@@ -3,9 +3,15 @@ myenv
 docs/logs
 *.log
 
+docs/logs/metrics
+*.*
+
 docs/*.md
 
 __pycache__/
 *.pyc
 
 data/dubai_dataset
+
+saved_models/
+*.pth
