@@ -68,7 +68,7 @@ for epoch in range(num_epochs):
         running_loss += loss.item()
         
         # Save the loss in CSV file
-        with open(csv_file_path, mode='a', newline='') as csv_file:
+        with open(csv_file_path, mode='w', newline='') as csv_file:
             fieldnames = ['epoch', 'step', 'loss']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             
