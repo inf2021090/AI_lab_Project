@@ -92,7 +92,8 @@ class SatelliteImageSegmentation(Dataset):
             label = self.rgb_2_label(mask_dataset[i])
             labels.append(label)
 
-        labels = np.expand_dims(np.array(labels), axis=3)                           
-        mask_dataset = np.array(mask_dataset)
-        return np.array(image_dataset), mask_dataset, labels
+       # labels = np.expand_dims(np.array(labels), axis=3)                           
+       # mask_dataset = np.array(mask_dataset)
+       # image_dataset = np.array(image_dataset)
+        return image_dataset, mask_dataset, labels
 
