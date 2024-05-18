@@ -5,6 +5,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from torchsummary import summary
 import numpy as np
+import csv
 from dataset import SatelliteImageSegmentation 
 from model import UNet 
 from utils import create_dir
@@ -17,10 +18,13 @@ batch_size = 8
 num_epochs = 2
 learning_rate = 1e-4
 patch_size = 256
-checkpoint_path = "../saved_models"
+
+model_checkpoint_path = "../saved_models"
+metrics_files_path = "../logs/metrics"
 
 # Mk directory if not exist
-create_dir(checkpoint_path)
+create_dir(model_checkpoint_path)
+create_dir(metrics_files_path)
 
 # Instantiate the dataset
 dataset = SatelliteImageSegmentation(dataset_path, patch_size)
@@ -33,7 +37,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
 total_classes = len(np.unique(labels)) # 6 classes for segmentation
 
-# Init  model, loss function, optimizer
+# Init model, loss function, optimizer
 model = UNet(total_classes)  
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -42,7 +46,11 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
+# CSV file path for logging loss
+csv_file_path = os.path.join(metrics_files_path, 'training_loss.csv')
 
+# Check if file exists to write the header only once
+file_exists = os.path.isfile(csv_file_path)
 
 # Training loop
 for epoch in range(num_epochs):
@@ -66,10 +74,26 @@ for epoch in range(num_epochs):
     # Log average loss per epoch
     avg_loss = running_loss / len(train_loader)
     print(f'Epoch [{epoch + 1}/{num_epochs}], Average Loss: {avg_loss:.4f}')
+    
+    # Save the model checkpoint after each epoch
+    model_save_path = os.path.join(model_checkpoint_path, f'unet_epoch_{epoch + 1}.pth')
+    torch.save(model.state_dict(), model_save_path)
+    
+    # Save the loss in CSV file
+    with open(csv_file_path, mode='a', newline='') as csv_file:
+        fieldnames = ['epoch', 'average_loss']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        
+        # Write the header only if the file is new
+        if not file_exists:
+            writer.writeheader()
+            file_exists = True
+        
+        # Write the metrics
+        writer.writerow({'epoch': epoch + 1, 'average_loss': avg_loss})
+
+# Save the final trained model
+final_model_save_path = os.path.join(model_checkpoint_path, 'unet_final.pth')
+torch.save(model.state_dict(), final_model_save_path)
 
 print('Training complete')
-
-# Save the model
-model_save_path = 'unet_model.pth'
-torch.save(model.state_dict(), model_save_path)
-print(f'Model saved to {model_save_path}')
