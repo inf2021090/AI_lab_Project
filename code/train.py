@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 import csv
-import matplotlib.pyplot as plt
+from sklearn.metrics import precision_score, recall_score, jaccard_score, f1_score
 from dataset import SatelliteImageSegmentation 
 from model import UNet 
 from utils import create_dir
@@ -48,14 +48,20 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Device being used: {device}")
 model.to(device)
 
-# CSV file path for logging loss
-csv_file_path = os.path.join(metrics_files_path, 'training_loss_per_epoch.csv')
+# CSV file path for logging loss and metrics
+csv_file_path = os.path.join(metrics_files_path, 'training_metrics_per_epoch.csv')
 file_exists = os.path.isfile(csv_file_path)
 
 # Training loop
 for epoch in range(num_epochs):
     model.train()
     running_loss = 0.0
+    running_jaccard = 0.0
+    running_dice = 0.0
+    running_pixel_accuracy = 0.0
+    running_precision = 0.0
+    running_recall = 0.0
+    
     for i, (images, labels) in enumerate(train_loader):
         images, labels = images.to(device), labels.to(device)
         
@@ -68,16 +74,37 @@ for epoch in range(num_epochs):
         
         running_loss += loss.item()
         
-        # Print the loss every step
-        print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{len(train_loader)}], Loss: {loss.item():.4f}')
+        # Calculate metrics for the batch
+        preds = torch.argmax(outputs, dim=1)
+        batch_jaccard = jaccard_score(labels.view(-1).cpu().numpy(), preds.view(-1).cpu().numpy(), average='micro')
+        batch_dice = f1_score(labels.view(-1).cpu().numpy(), preds.view(-1).cpu().numpy(), average='micro')
+        batch_pixel_accuracy = (preds == labels.squeeze(1)).float().mean().item()
+        batch_precision = precision_score(labels.view(-1).cpu().numpy(), preds.view(-1).cpu().numpy(), average='micro')
+        batch_recall = recall_score(labels.view(-1).cpu().numpy(), preds.view(-1).cpu().numpy(), average='micro')
+        
+        # Accumulate metrics
+        running_jaccard += batch_jaccard
+        running_dice += batch_dice
+        running_pixel_accuracy += batch_pixel_accuracy
+        running_precision += batch_precision
+        running_recall += batch_recall
+        
+        # Print the loss and metrics every step
+        print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{len(train_loader)}], Loss: {loss.item():.4f}, Jaccard: {batch_jaccard:.4f}, Dice: {batch_dice:.4f}, Pixel Accuracy: {batch_pixel_accuracy:.4f}, Precision: {batch_precision:.4f}, Recall: {batch_recall:.4f}')
     
-    # Calculate average loss for the epoch
+    # Calculate average metrics for the epoch
     avg_loss = running_loss / len(train_loader)
-    print(f'Epoch [{epoch + 1}/{num_epochs}], Average Loss: {avg_loss:.4f}')
+    avg_jaccard = running_jaccard / len(train_loader)
+    avg_dice = running_dice / len(train_loader)
+    avg_pixel_accuracy = running_pixel_accuracy / len(train_loader)
+    avg_precision = running_precision / len(train_loader)
+    avg_recall = running_recall / len(train_loader)
     
-    # Log average loss per epoch to CSV file
+    print(f'Epoch [{epoch + 1}/{num_epochs}], Average Loss: {avg_loss:.4f}, Average Jaccard: {avg_jaccard:.4f}, Average Dice: {avg_dice:.4f}, Average Pixel Accuracy: {avg_pixel_accuracy:.4f}, Average Precision: {avg_precision:.4f}, Average Recall: {avg_recall:.4f}')
+    
+    # Log average loss and metrics per epoch to CSV file
     with open(csv_file_path, mode='a', newline='') as csv_file:
-        fieldnames = ['epoch', 'average_loss']
+        fieldnames = ['epoch', 'average_loss', 'average_jaccard', 'average_dice', 'average_pixel_accuracy', 'average_precision', 'average_recall']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         
         # Write the header only if the file is new
@@ -85,8 +112,8 @@ for epoch in range(num_epochs):
             writer.writeheader()
             file_exists = True
         
-        # Write the average loss
-        writer.writerow({'epoch': epoch + 1, 'average_loss': avg_loss})
+        # Write the average loss and metrics
+        writer.writerow({'epoch': epoch + 1, 'average_loss': avg_loss, 'average_jaccard': avg_jaccard, 'average_dice': avg_dice, 'average_pixel_accuracy': avg_pixel_accuracy, 'average_precision': avg_precision, 'average_recall': avg_recall})
     
     # Save the model checkpoint after each epoch
     model_save_path = os.path.join(model_checkpoint_path, f'unet_epoch_{epoch + 1}.pth')
@@ -97,6 +124,9 @@ final_model_save_path = os.path.join(model_checkpoint_path, 'unet_final.pth')
 torch.save(model.state_dict(), final_model_save_path)
 
 print('Training complete')
+
+
+
 
 
 
