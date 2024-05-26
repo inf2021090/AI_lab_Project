@@ -15,7 +15,7 @@ dataset_path = '../data/dubai_dataset'
 
 # Hyperparameters
 batch_size = 8
-num_epochs = 2
+num_epochs = 10
 learning_rate = 1e-4
 patch_size = 256
 
@@ -45,10 +45,11 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 # Set up device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Device being used: {device}")
 model.to(device)
 
 # CSV file path for logging loss
-csv_file_path = os.path.join(metrics_files_path, 'training_loss_steps.csv')
+csv_file_path = os.path.join(metrics_files_path, 'training_loss_per_epoch.csv')
 file_exists = os.path.isfile(csv_file_path)
 
 # Training loop
@@ -67,25 +68,25 @@ for epoch in range(num_epochs):
         
         running_loss += loss.item()
         
-        # Save the loss in CSV file
-        with open(csv_file_path, mode='w', newline='') as csv_file:
-            fieldnames = ['epoch', 'step', 'loss']
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-            
-            # Write the header only if the file is new
-            if not file_exists:
-                writer.writeheader()
-                file_exists = True
-            
-            # Write the metrics
-            writer.writerow({'epoch': epoch + 1, 'step': i + 1, 'loss': loss.item()})
-        
-        if i % 10 == 9:  # Print every 10 mini-batches
-            print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{len(train_loader)}], Loss: {loss.item():.4f}')
+        # Print the loss every step
+        print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{len(train_loader)}], Loss: {loss.item():.4f}')
     
-    # Log average loss per epoch
+    # Calculate average loss for the epoch
     avg_loss = running_loss / len(train_loader)
     print(f'Epoch [{epoch + 1}/{num_epochs}], Average Loss: {avg_loss:.4f}')
+    
+    # Log average loss per epoch to CSV file
+    with open(csv_file_path, mode='a', newline='') as csv_file:
+        fieldnames = ['epoch', 'average_loss']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        
+        # Write the header only if the file is new
+        if not file_exists:
+            writer.writeheader()
+            file_exists = True
+        
+        # Write the average loss
+        writer.writerow({'epoch': epoch + 1, 'average_loss': avg_loss})
     
     # Save the model checkpoint after each epoch
     model_save_path = os.path.join(model_checkpoint_path, f'unet_epoch_{epoch + 1}.pth')
@@ -96,6 +97,7 @@ final_model_save_path = os.path.join(model_checkpoint_path, 'unet_final.pth')
 torch.save(model.state_dict(), final_model_save_path)
 
 print('Training complete')
+
 
 
 
