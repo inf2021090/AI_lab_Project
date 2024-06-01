@@ -15,7 +15,7 @@ dataset_path = '../data/dubai_dataset'
 
 # Hyperparameters
 batch_size = 8
-num_epochs = 50
+num_epochs = 25 # modify accordingly
 learning_rate = 1e-4
 patch_size = 256
 
@@ -31,10 +31,25 @@ create_dir(metrics_files_path)
 dataset = SatelliteImageSegmentation(dataset_path, patch_size)
 image_dataset, mask_dataset, labels = dataset.load_dataset()
 
+# Split dataset into training and validation sets
+num_samples = len(image_dataset)
+split_ratio = 0.8
+split_index = int(num_samples * split_ratio)
+
+train_images = image_dataset[:split_index]
+train_labels = labels[:split_index]
+
+validation_images = image_dataset[split_index:]
+validation_labels = labels[split_index:]
+
 # Create DataLoader
-train_dataset = TensorDataset(torch.tensor(image_dataset, dtype=torch.float32).permute(0, 3, 1, 2),
-                              torch.tensor(labels, dtype=torch.long))
+train_dataset = TensorDataset(torch.tensor(train_images, dtype=torch.float32).permute(0, 3, 1, 2),
+                              torch.tensor(train_labels, dtype=torch.long))
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+validation_dataset = TensorDataset(torch.tensor(validation_images, dtype=torch.float32).permute(0, 3, 1, 2),
+                                   torch.tensor(validation_labels, dtype=torch.long))
+validation_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False)
 
 total_classes = len(np.unique(labels)) # 6 classes for segmentation
 
@@ -99,12 +114,43 @@ for epoch in range(num_epochs):
     avg_pixel_accuracy = running_pixel_accuracy / len(train_loader)
     avg_precision = running_precision / len(train_loader)
     avg_recall = running_recall / len(train_loader)
+
+    # Validation loop
+    model.eval()  # Set model to evaluation mode
+    validation_loss = 0.0
+
+    with torch.no_grad():  # No need to compute gradients during validation
+        for images, labels in validation_loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            loss = criterion(outputs, labels.squeeze(1))
+            validation_loss += loss.item() * images.size(0)  # Accumulate validation loss
+
+    # Calculate average validation loss
+    avg_validation_loss = validation_loss / len(validation_loader.dataset)
+    print(    f'Epoch [{epoch + 1}/{num_epochs}], Average Validation Loss: {avg_validation_loss:.4f}')
     
-    print(f'Epoch [{epoch + 1}/{num_epochs}], Average Loss: {avg_loss:.4f}, Average Jaccard: {avg_jaccard:.4f}, Average Dice: {avg_dice:.4f}, Average Pixel Accuracy: {avg_pixel_accuracy:.4f}, Average Precision: {avg_precision:.4f}, Average Recall: {avg_recall:.4f}')
+    print(f'Epoch [{epoch + 1}/{num_epochs}], Average Loss: {avg_loss:.4f}, Average Jaccard: {avg_jaccard:.4f}, Average Dice: {avg_dice:.4f}, Average Pixel Accuracy: {avg_pixel_accuracy:.4f}, Average Precision: {avg_precision:.4f}, Average Recall: {avg_recall:.4f}, Average Validation Loss: {avg_validation_loss:.4f}')
     
-    # Log average loss and metrics per epoch to CSV file
+    # Validation loop
+    model.eval()  # Set model to evaluation mode
+    validation_loss = 0.0
+
+    with torch.no_grad():  # No need to compute gradients during validation
+        for images, labels in validation_loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            loss = criterion(outputs, labels.squeeze(1))
+            validation_loss += loss.item() * images.size(0)  # Accumulate validation loss
+
+    # Calculate average validation loss
+    avg_validation_loss = validation_loss / len(validation_loader.dataset)
+    print(    f'Epoch [{epoch + 1}/{num_epochs}], Average Validation Loss: {avg_validation_loss:.4f}')
+
+    # Save validation loss to CSV file
+    # Add a new field in the CSV file to store the validation loss
     with open(csv_file_path, mode='a', newline='') as csv_file:
-        fieldnames = ['epoch', 'average_loss', 'average_jaccard', 'average_dice', 'average_pixel_accuracy', 'average_precision', 'average_recall']
+        fieldnames = ['epoch', 'average_loss', 'average_jaccard', 'average_dice', 'average_pixel_accuracy', 'average_precision', 'average_recall', 'average_validation_loss']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         
         # Write the header only if the file is new
@@ -113,7 +159,8 @@ for epoch in range(num_epochs):
             file_exists = True
         
         # Write the average loss and metrics
-        writer.writerow({'epoch': epoch + 1, 'average_loss': avg_loss, 'average_jaccard': avg_jaccard, 'average_dice': avg_dice, 'average_pixel_accuracy': avg_pixel_accuracy, 'average_precision': avg_precision, 'average_recall': avg_recall})
+        writer.writerow({'epoch': epoch + 1, 'average_loss': avg_loss, 'average_jaccard': avg_jaccard, 'average_dice': avg_dice, 'average_pixel_accuracy': avg_pixel_accuracy, 'average_precision': avg_precision, 'average_recall': avg_recall, 'average_validation_loss': avg_validation_loss})
+
     
     # Save the model checkpoint after each epoch
     model_save_path = os.path.join(model_checkpoint_path, f'unet_epoch_{epoch + 1}.pth')
@@ -124,4 +171,8 @@ final_model_save_path = os.path.join(model_checkpoint_path, 'unet_final.pth')
 torch.save(model.state_dict(), final_model_save_path)
 
 print('Training complete')
+
+print('Training complete')
+
+
 

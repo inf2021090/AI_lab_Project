@@ -1,11 +1,20 @@
 import os
 import torch
 import numpy as np
+import random
+import torch
+import shutil
 
-# create a directory
 def create_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
+def remove_dir(directory_path):
+    if os.path.exists(directory_path):
+        shutil.rmtree(directory_path)
+        print(f"Directory '{directory_path}' and its contents have been deleted.")
+    else:
+        print(f"Directory '{directory_path}' does not exist.")
 
 def hex_2_array(hex_color):
     hex_color = hex_color.lstrip('#')
@@ -31,6 +40,8 @@ def jaccard_coef(y_true, y_pred):
     jaccard = (intersection + 1.0) / (union + 1.0)
 
     return jaccard
+
+
 
 
 
