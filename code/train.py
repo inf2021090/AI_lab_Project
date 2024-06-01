@@ -15,7 +15,7 @@ dataset_path = '../data/dubai_dataset'
 
 # Hyperparameters
 batch_size = 8
-num_epochs = 10
+num_epochs = 50
 learning_rate = 1e-4
 patch_size = 256
 
@@ -49,7 +49,7 @@ print(f"Device being used: {device}")
 model.to(device)
 
 # CSV file path for logging loss and metrics
-csv_file_path = os.path.join(metrics_files_path, 'training_metrics_per_epoch.csv')
+csv_file_path = os.path.join(metrics_files_path, 'training_metrics.csv')
 file_exists = os.path.isfile(csv_file_path)
 
 # Training loop
@@ -124,11 +124,4 @@ final_model_save_path = os.path.join(model_checkpoint_path, 'unet_final.pth')
 torch.save(model.state_dict(), final_model_save_path)
 
 print('Training complete')
-
-
-
-
-
-
-
 
