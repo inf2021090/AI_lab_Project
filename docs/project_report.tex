@@ -13,11 +13,11 @@
     \includegraphics[width=0.5\textwidth]{../assets/sapienza_logo.png} 
     \vfill
     {\bfseries\Large
-        Title of Your Article\par
+        AI Lab Project: Image Segmentation UNet model\par
     }
     \vfill
     {\Large
-        Author Name(s)\par
+        Konstantinos Kafteranis ()\par
     }
     \vfill
     {\large
@@ -26,35 +26,57 @@
 \end{titlepage}
 
 \begin{abstract}
-This is the abstract of your article. It should provide a brief summary of your research, including the objectives, methods, and key findings.
-\end{abstract}
+    This project leverages PyTorch for image segmentation of satellite imagery, utilizing deep a learning model to  delineate and classify various land cover types. \end{abstract}
 
 \section{Introduction}
-\lipsum[1]
-Your introduction provides background information on the topic of your research, outlines the objectives of the study, and explains the significance of the research.
+Satellite imagery provides a wealth of information essential for monitoring and managing our environment. However, effectively interpreting this data requires sophisticated techniques to extract meaningful insights from the vast and complex images. Image segmentation, a process of partitioning images into distinct regions, plays a crucial role in this context. This project uses PyTorch, a leading deep learning framework, to experiment with image segmentation models tailored for satellite images.
 
 \section{Methodology}
-\lipsum[2]
-The methodology section describes the research methods and experimental procedures used in your study, including data collection, sample preparation, and data analysis techniques.
+This project is inspired by a video workshop on a similar implementation utilizing TensorFlow and is focused on developing a modular codebase for image segmentation of satellite images using PyTorch. Our approach is structured to ensure clarity and reusability, dividing the core components into datasets, models, training, and utilities.
+
+The utilities module contains functions for general operations and calculations, such as directory creation, which are not directly related to the model but are frequently used throughout the project. The dataset module features a custom data loader designed to efficiently manage our specific satellite imagery dataset.
+
+Although largely a reconstruction of the original implementation, our approach is object-oriented, enhancing maintainability and extensibility. A significant improvement is the accurate association of colors to classes. We achieved this by creating a dictionary to map each class to its corresponding RGB values and implementing a function to assign these RGB values to the correct labels.
+
+The training module is a critical component of our image segmentation project, responsible for orchestrating the training process of the UNet model using the satellite image dataset. This module integrates various elements including data loading, model training, evaluation, and logging of metrics.
+
+ Training Module consists of:
+1)Dataset Preparation:
+The dataset is prepared using a custom data loader from the SatelliteImageSegmentation class, which processes the satellite imagery and corresponding masks. The dataset is then split into training and validation sets.
+
+2)DataLoader Initialization:
+PyTorch's DataLoader is used to create iterators for the training and validation datasets, allowing efficient batch processing and shuffling of data during training.
+
+3)Model, Loss Function, and Optimizer:
+The UNet model is initialized along with the cross-entropy loss function and the Adam optimizer. The model is then moved to the appropriate device (CPU or GPU) for training.
+
+4)Training Loop:
+The training process runs for a specified number of epochs. In each epoch, the model is set to training mode, and a forward pass is performed on each batch of images. The loss is computed and backpropagation is used to update the model parameters. Metrics such as Jaccard index, Dice coefficient, pixel accuracy, precision, and recall are calculated for each batch to monitor the performance.
+
+5)Validation Loop:
+After each training epoch, the model is evaluated on the validation set. The average validation loss is computed to assess the model's performance on unseen data.
+
+6)Metrics Logging:
+Training and validation metrics are logged to a CSV file after each epoch. This includes the average loss, Jaccard index, Dice coefficient, pixel accuracy, precision, and recall, providing a comprehensive overview of the model's performance over time.
+
+7)Model Checkpointing:
+The model's state is saved at the end of each epoch, allowing for checkpointing and potential recovery if needed. The final trained model is also saved at the end of the training process.
+
+At the heart of our model module is a simple yet effective UNet implementation. This architecture is well-suited for image segmentation tasks, enabling precise delineation and classification of various land cover types in satellite images. Our enhancements and structured approach aim to improve the functionality and accuracy of satellite image segmentation, making it a valuable tool for environmental monitoring, urban planning, and disaster management.
+\section{Data}
+\lipsum[3]
+The conclusion summarizes the main findings of your study, highlights any limitations or areas for future research, and provides closing remarks.
 
 \section{Model}
-\lipsum[3]
+\lipsum[4]
 This section presents the theoretical or computational model used in your research, including any assumptions, equations, or algorithms employed in the analysis.
 
 \section{Results}
-\lipsum[4]
+\lipsum[5]
 The results section presents the findings of your study, including data tables, graphs, or figures that illustrate the key results and support your conclusions.
 
-\section{Discussion}
-\lipsum[5]
-In the discussion section, you interpret the results of your study, compare them to previous research, and discuss their implications for the field.
-
-\section{Conclusion}
-\lipsum[6]
-The conclusion summarizes the main findings of your study, highlights any limitations or areas for future research, and provides closing remarks.
-
 \section{Resources}
-\lipsum[7]
+\lipsum[6]
 This section acknowledges any funding sources, collaborators, or resources that contributed to the research.
 
 \end{document}
