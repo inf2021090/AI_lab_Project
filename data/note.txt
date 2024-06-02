@@ -1,1 +1,5 @@
 Download the dubai datset for Kaggle and paste it in the data folder
+
+https://www.kaggle.com/datasets/humansintheloop/semantic-segmentation-of-aerial-imagery
+
+save it in a folder named dubai_dataset if you dont want to modify paths in code
