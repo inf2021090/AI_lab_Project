@@ -6,15 +6,11 @@ from patchify import patchify
 from torch.utils.data import Dataset
 from utils import hex_2_array
 
-from matplotlib import pyplot as plt
-import random
-import logging
 
 class SatelliteImageSegmentation(Dataset):
     def __init__(self, dataset_path, patch_size=256):
         self.dataset_path = dataset_path
         self.patch_size = patch_size
-        self.logger = logging.getLogger(__name__)  # Initialize logger
         self.class_colors = {
             'building': hex_2_array('#3C1098'),
             'land': hex_2_array('#8429F6'),
@@ -52,7 +48,6 @@ class SatelliteImageSegmentation(Dataset):
         labels = []
         img_log_path = "../docs/logs/img_shape.log"
         msk_log_path = "../docs/logs/msk_shape.log"
-        logging.basicConfig(filename=img_log_path, level=logging.INFO)  # Set up logging configuration
         for image_type in ['images', 'masks']:
             if image_type == 'images':
                 image_extension = 'jpg'
@@ -83,9 +78,7 @@ class SatelliteImageSegmentation(Dataset):
                                         patch_mask = patches[i,j,:,:]
                                         patch_mask = patch_mask[0]
                                         mask_dataset.append(patch_mask)
-                                        #labels
-                                    # Log the shape of the individual patched image
-                                    self.logger.info(f"Shape of patched image {tile_id}-{image_id}-{i}-{j}: {patch_image.shape}")
+                                        
 
         # Process masks to labels
         for i in range(len(mask_dataset)):

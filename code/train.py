@@ -172,7 +172,6 @@ torch.save(model.state_dict(), final_model_save_path)
 
 print('Training complete')
 
-print('Training complete')
 
 
 

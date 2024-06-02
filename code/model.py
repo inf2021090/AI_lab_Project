@@ -101,6 +101,9 @@ class UNet(nn.Module):
         out = self.final(dec_out)
         return out
 
+
+""""
+
 # Test
 if __name__ == "__main__":
     num_classes = 6
@@ -108,7 +111,8 @@ if __name__ == "__main__":
     x = torch.randn(1, 3, 256, 256)  # batch size 1, 3 color ch, 256x256 image
     output = model(x)
     print(output.shape)  # result [1, 6, 256, 256]
-
+    
+"""
  
 
 
