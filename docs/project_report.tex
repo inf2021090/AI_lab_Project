@@ -1,10 +1,10 @@
 \documentclass{article}
 \usepackage{graphicx}
 \usepackage{lipsum}
-\usepackage{url}
+\usepackage{hyperref}
 
 \title{Title}
-\author{Konstantinos Kafteranis \and Jon Dorronsoro}
+\author{Author Name(s)}
 \date{\today}
 
 \begin{document}
@@ -18,7 +18,7 @@
     }
     \vfill
     {\Large
-        Konstantinos Kafteranis \and Jon Dorronsoro\par
+        Konstantinos Kafteranis (2162765)\par Jon Dorronsoro (2168329)\par
     }
     \vfill
     {\large
@@ -27,7 +27,7 @@
 \end{titlepage}
 
 \begin{abstract}
-    This project leverages PyTorch for image segmentation of satellite imagery, utilizing a deep learning model to delineate and classify various land cover types. 
+    This project leverages PyTorch for image segmentation of satellite imagery, utilizing a deep learning model to delineate and classify various land cover types.
 \end{abstract}
 
 \section{Introduction}
@@ -42,27 +42,16 @@ Although largely a reconstruction of the original implementation, our approach i
 
 The training module is a critical component of our image segmentation project, responsible for orchestrating the training process of the UNet model using the satellite image dataset. This module integrates various elements including data loading, model training, evaluation, and logging of metrics.
 
- Training Module consists of:
-1)Dataset Preparation:
-The dataset is prepared using a custom data loader from the SatelliteImageSegmentation class, which processes the satellite imagery and corresponding masks. The dataset is then split into training and validation sets.
-
-2)DataLoader Initialization:
-PyTorch's DataLoader is used to create iterators for the training and validation datasets, allowing efficient batch processing and shuffling of data during training.
-
-3)Model, Loss Function, and Optimizer:
-The UNet model is initialized along with the cross-entropy loss function and the Adam optimizer. The model is then moved to the appropriate device (CPU or GPU) for training.
-
-4)Training Loop:
-The training process runs for a specified number of epochs. In each epoch, the model is set to training mode, and a forward pass is performed on each batch of images. The loss is computed and backpropagation is used to update the model parameters. Metrics such as Jaccard index, Dice coefficient, pixel accuracy, precision, and recall are calculated for each batch to monitor the performance.
-
-5)Validation Loop:
-After each training epoch, the model is evaluated on the validation set. The average validation loss is computed to assess the model's performance on unseen data.
-
-6)Metrics Logging:
-Training and validation metrics are logged to a CSV file after each epoch. This includes the average loss, Jaccard index, Dice coefficient, pixel accuracy, precision, and recall, providing a comprehensive overview of the model's performance over time.
-
-7)Model Checkpointing:
-The model's state is saved at the end of each epoch, allowing for checkpointing and potential recovery if needed. The final trained model is also saved at the end of the training process.
+\subsection{Training Module}
+\begin{enumerate}
+    \item \textbf{Dataset Preparation}: The dataset is prepared using a custom data loader from the SatelliteImageSegmentation class, which processes the satellite imagery and corresponding masks. The dataset is then split into training and validation sets.
+    \item \textbf{DataLoader Initialization}: PyTorch's DataLoader is used to create iterators for the training and validation datasets, allowing efficient batch processing and shuffling of data during training.
+    \item \textbf{Model, Loss Function, and Optimizer}: The UNet model is initialized along with the cross-entropy loss function and the Adam optimizer. The model is then moved to the appropriate device (CPU or GPU) for training.
+    \item \textbf{Training Loop}: The training process runs for a specified number of epochs. In each epoch, the model is set to training mode, and a forward pass is performed on each batch of images. The loss is computed and backpropagation is used to update the model parameters. Metrics such as Jaccard index, Dice coefficient, pixel accuracy, precision, and recall are calculated for each batch to monitor performance.
+    \item \textbf{Validation Loop}: After each training epoch, the model is evaluated on the validation set. The average validation loss is computed to assess the model's performance on unseen data.
+    \item \textbf{Metrics Logging}: Training and validation metrics are logged to a CSV file after each epoch. This includes the average loss, Jaccard index, Dice coefficient, pixel accuracy, precision, and recall, providing a comprehensive overview of the model's performance over time.
+    \item \textbf{Model Checkpointing}: The model's state is saved at the end of each epoch, allowing for checkpointing and potential recovery if needed. The final trained model is also saved at the end of the training process.
+\end{enumerate}
 
 At the heart of our model module is a simple yet effective UNet implementation. This architecture is well-suited for image segmentation tasks, enabling precise delineation and classification of various land cover types in satellite images. Our enhancements and structured approach aim to improve the functionality and accuracy of satellite image segmentation, making it a valuable tool for environmental monitoring, urban planning, and disaster management.
 
@@ -71,22 +60,37 @@ The dataset used for training the U-Net model is the "Semantic Segmentation of A
 
 Link to dataset: \url{https://www.kaggle.com/datasets/humansintheloop/semantic-segmentation-of-aerial-imagery}
 
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../data/dubai_dataset/Tile 1/images/image_part_006.jpg}
+        \caption{RGB Image}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../data/dubai_dataset/Tile 1/masks/image_part_006.png}
+        \caption{Mask Image}
+    \end{subfigure}
+\end{figure}
+
 \section{Model}
 The U-Net model implemented in this project is designed for semantic segmentation tasks using the PyTorch library. Here’s a detailed description of the model components:
 
-1. \textbf{Conv\_Block}:
-    A custom convolutional block consisting of two convolution layers, each followed by a ReLU activation function and dropout for regularization. This block is used throughout the encoder and decoder to extract and refine features.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../assets/UNet.jpg}
+    \caption{UNet Architecture}
+    \label{fig:metrics_over_epochs}
+\end{figure}
 
-2. \textbf{Encoder}:
-    The encoder comprises four convolutional blocks, each followed by a max-pooling layer to progressively reduce the spatial dimensions while increasing the depth of the feature maps. The final output of the encoder is passed through a bottleneck layer, which further compresses the feature maps.
-
-3. \textbf{Decoder}:
-    The decoder uses transposed convolutional layers to upsample the feature maps and restore the original spatial dimensions. After each upsampling, the corresponding feature maps from the encoder are concatenated to retain spatial information. Convolutional blocks refine these concatenated features.
-
-4. \textbf{Final Layer}:
-    The final layer of the U-Net is a 1x1 convolution that maps the refined feature maps to the desired number of output classes, producing a multi-class segmentation map.
-
-\subsection{Model Architecture}
+\begin{itemize}
+    \item \textbf{Conv\_Block}: A custom convolutional block consisting of two convolution layers, each followed by a ReLU activation function and dropout for regularization. This block is used throughout the encoder and decoder to extract and refine features.
+    \item \textbf{Encoder}: The encoder comprises four convolutional blocks, each followed by a max-pooling layer to progressively reduce the spatial dimensions while increasing the depth of the feature maps. The final output of the encoder is passed through a bottleneck layer, which further compresses the feature maps.
+    \item \textbf{Decoder}: The decoder uses transposed convolutional layers to upsample the feature maps and restore the original spatial dimensions. After each upsampling, the corresponding feature maps from the encoder are concatenated to retain spatial information. Convolutional blocks refine these concatenated features.
+    \item \textbf{Final Layer}: The final layer of the U-Net is a 1x1 convolution that maps the refined feature maps to the desired number of output classes, producing a multi-class segmentation map.
+\end{itemize}
 
 The model architecture can be summarized as follows:
 
@@ -111,7 +115,6 @@ The model architecture can be summarized as follows:
 \end{itemize}
 
 \subsection{Example Usage}
-
 \begin{verbatim}
 # Test
 if __name__ == "__main__":
@@ -125,11 +128,37 @@ if __name__ == "__main__":
 This U-Net model is effective for semantic segmentation tasks, particularly for high-resolution aerial imagery, by leveraging its encoder-decoder architecture to capture and reconstruct spatial features accurately.
 
 \section{Results}
-\lipsum[5]
-The results section presents the findings of your study, including data tables, graphs, or figures that illustrate the key results and support your conclusions.
+The  model  shows promising progress across epochs, indicating its capability to accurately segment images. Initially, the model starts with modest segmentation accuracy, as seen from the average loss of 1.67 in the first epoch. However, as training continues, there's a noticeable improvement. By the 25th epoch, the average loss decreases to 0.72, showing that the model is getting better at capturing detailed image features. Metrics like Jaccard, Dice, Pixel Accuracy, Precision, and Recall also improve consistently, suggesting that the model is learning to create more precise segmentation masks over time. This indicates that the UNet model has the potential to be a reliable tool for various image segmentation tasks.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../assets/metrics.png}
+    \caption{Metrics Over Epochs}
+    \label{fig:metrics_over_epochs}
+\end{figure}
+
+
+An intriguing part of the results to observe is the relationship between the average training loss and the average validation loss across epochs. Initially, during the early epochs, the average training loss tends to be higher than the average validation loss. This discrepancy suggests that the model is effectively learning from the training data but may struggle slightly when generalizing to unseen validation data. However, as training progresses, the average training loss steadily decreases, converging towards the average validation loss. This convergence indicates that the model is becoming more adept at generalizing its learned features to unseen data, resulting in a comparable performance between the training and validation sets. Ultimately, this alignment between the training and validation losses signifies a well-trained model that is capable of effectively capturing the underlying patterns in the data while maintaining its ability to generalize to new, unseen instances.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../assets/comparison.png}
+    \caption{Training vs Validation Loss}
+    \label{fig:training_vs_validation_loss}
+\end{figure}
 
 \section{Resources}
-\lipsum[6]
-This section acknowledges any funding sources, collaborators, or resources that contributed to the research.
+\begin{itemize}
+    \item \href{https://youtu.be/UBzMgr6yfpw?si=xs_FN5irO61StvlF}{Video Workshop Tutorial}
+    \item \href{https://pytorch.org/docs/stable/index.html}{PyTorch Documentation}
+    \item \href{https://www.geeksforgeeks.org/pytorch/}{GeeksforGeeks PyTorch Page}
+    \item \href{https://docs.opencv.org/master/}{OpenCV Documentation}
+    \item \href{https://www.learnpytorch.io/}{LearnPytorch}
+    \item \href{https://amaarora.github.io/posts/2020-09-13-unet.html}{U-Net: A PyTorch Implementation in 60 lines of Code}
+    \item \href{https://towardsdatascience.com/understanding-semantic-segmentation-with-unet-6be4f42d4b47}{Understanding Semantic Segmentation with UNET}
+    \item \href{https://course.fast.ai/}{Practical Deep Learning}
+    \item \href{https://youtu.be/T0BiFBaMLDQ?si=x5QIm7DQiN6vbzwT}{UNet Video Tutorial}
+    \item \href{https://arxiv.org/abs/1505.04597}{U-Net: Convolutional Networks for Biomedical Image Segmentation}
+\end{itemize}
 
 \end{document}
