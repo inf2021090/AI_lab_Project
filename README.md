@@ -59,4 +59,4 @@ Training metrics are saved in a CSV file and can be visualized using the Jupyter
 
 Team
 * Konstantinos Kafteranis 
-* Jon Dorronsoro (2168329) 
+* Jon Dorronsoro
