@@ -1,32 +1,62 @@
-### Satellite Image Segmentation
 
-This project focuses on satellite image segmentation using PyTorch, applied to a dataset of satellite images from Dubai. The goal is to  segment and classify different land cover types within the images
+# Satellite Image Segmentation
 
-### Dataset
+This project focuses on satellite image segmentation using PyTorch and a U-Net model. The goal is to identify and classify different land cover types in satellite images of Dubai.
 
-https://www.kaggle.com/datasets/humansintheloop/semantic-segmentation-of-aerial-imagery
+## Dataset
 
-Save it in data directory and name the folder dubai_datest
+We used the [Semantic Segmentation of Aerial Imagery](https://www.kaggle.com/datasets) dataset.
+
+Download the dataset and place it inside the `data/` directory in a folder named `dubai_datest`.
+
+## Technologies Used
+
+* Python
+* PyTorch
+* U-Net
+* NumPy
+* Jupyter Notebook
+
+## Project Structure
+
+* `code/` – Contains the implementation of the model, dataset handling, utilities, and training.
+* `data/` – Contains the satellite image dataset.
+* `notebooks/` – Contains notebooks for visualizing training metrics.
+* `docs/` – Contains the project report.
+* `requirements.txt` – Lists the required Python packages.
+
+## Installation and Usage
+
+1. Clone the repository:
+   ```bash
+   git clone [https://github.com/inf2021090/AI_lab_Project.git](https://github.com/inf2021090/AI_lab_Project.git)
+   cd AI_lab_Project
+
+```
+
+2. Install the required packages:
+```bash
+pip install -r requirements.txt
+
+```
 
 
-### Code
+3. Download the dataset and place it in the `data/dubai_datest/` directory.
+4. Navigate to the code directory and run the training script:
+```bash
+cd code
+python train.py
 
-In code directory there are the moduls for the UNet implementation
+```
 
-* Dataset
-* Utils
-* Model
-* Train
 
-Run train.py by  python train.py 
 
-### Notebook
+## Results
 
-The training metrics are saved in a csv and are visualized in a jupyter notebook in notebooks directory
+Training metrics are saved in a CSV file and can be visualized using the Jupyter notebooks in the `notebooks/` directory.
 
-### Docs
 
-Full project report in pdf 
 
-### Group
-#### Project made 
+Team
+* Konstantinos Kafteranis 
+* Jon Dorronsoro (2168329) 
