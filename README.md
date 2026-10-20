@@ -29,6 +29,4 @@ The training metrics are saved in a csv and are visualized in a jupyter notebook
 Full project report in pdf 
 
 ### Group
-#### Project made by
-* Konstantinos Kafteranis (2162765)
-* Jon Dorronsoro (2168329)
+#### Project made 
